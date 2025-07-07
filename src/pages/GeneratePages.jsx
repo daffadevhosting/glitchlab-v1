@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
-  const [isFreeUser, setIsFreeUser] = useState(true); // bisa diganti dari auth
+  const [isFreeUser, setIsFreeUser] = useState(true); // bisa dikaitkan ke auth nanti
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,55 +18,54 @@ export default function GeneratePage() {
       const payRes = await fetch("https://glitchlab.warpzone.workers.dev/generator/pay", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt })
       });
 
       const data = await payRes.json();
-      if (!data.snap_token || !data.order_id)
-        throw new Error(data.error || "Gagal ambil token Snap.");
+      if (!data.snap_token || !data.order_id) throw new Error(data.error || "Gagal ambil token pembayaran.");
+
+      const orderId = data.order_id; // simpan ID transaksi
 
       toast("Membuka jendela pembayaran...", { icon: "💳" });
 
       window.snap.pay(data.snap_token, {
         onSuccess: () => {
           toast.success("Pembayaran berhasil, generate dimulai...");
-          generateImage(prompt, data.order_id);
+          generateImage(prompt, orderId);
         },
         onPending: () => {
-          toast("Pembayaran Anda masih tertunda", { icon: "⏳" });
+          toast("Pembayaran Anda tertunda", { icon: "⏳" });
           setIsLoading(false);
         },
         onError: () => {
-          toast.error("Gagal proses pembayaran.");
+          toast.error("Pembayaran gagal.");
           setIsLoading(false);
         },
         onClose: () => {
-          if (!isLoading) {
-            toast("Jendela pembayaran ditutup", { icon: "⚠️" });
-          }
-        },
+          if (!isLoading) toast("Jendela pembayaran ditutup", { icon: "⚠️" });
+        }
       });
+
     } catch (err) {
-      toast.error(err.message || "Error tak terduga.");
+      toast.error(err.message || "Terjadi kesalahan saat proses pembayaran.");
       setIsLoading(false);
     }
   };
 
   const generateImage = async (prompt, order_id) => {
     try {
-      const res = await fetch(
-        `https://glitchlab.warpzone.workers.dev/generate-image?order_id=${order_id}&prompt=${encodeURIComponent(prompt)}`
-      );
+      const res = await fetch(`https://glitchlab.warpzone.workers.dev/generate-image?order_id=${order_id}&prompt=${encodeURIComponent(prompt)}`);
 
       if (!res.ok) {
         const errMsg = await res.text();
-        throw new Error(errMsg || "Gagal memproses gambar");
+        throw new Error(errMsg || "Gagal memproses gambar.");
       }
 
       const blob = await res.blob();
       const objectURL = URL.createObjectURL(blob);
 
       if (isFreeUser) {
+        // Tambahkan watermark
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.onload = () => {
@@ -84,7 +82,7 @@ export default function GeneratePage() {
 
           setImageUrl(canvas.toDataURL("image/png"));
           setIsLoading(false);
-          toast.success("Gambar berhasil dibuat (gratis)");
+          toast.success("Gambar berhasil dibuat (gratis).");
         };
         img.src = objectURL;
       } else {
@@ -92,8 +90,9 @@ export default function GeneratePage() {
         setIsLoading(false);
         toast.success("Gambar berhasil dibuat!");
       }
+
     } catch (err) {
-      toast.error(err.message || "Gagal generate gambar.");
+      toast.error(err.message || "Terjadi kesalahan saat generate gambar.");
       setIsLoading(false);
     }
   };
