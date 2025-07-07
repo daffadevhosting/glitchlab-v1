@@ -1,74 +1,83 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { Link } from "react-router-dom";
 
 export default function GeneratePage() {
-const [prompt, setPrompt] = useState("");
-const [imageUrl, setImageUrl] = useState(null);
-const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [prompt, setPrompt] = useState("");
+  const [imageUrl, setImageUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setImageUrl(null);
+  const orderIdFromURL = searchParams.get("order_id");
+  const txStatus = searchParams.get("transaction_status");
 
-  try {
-    const orderRes = await fetch("https://glitchlab.warpzone.workers.dev/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
-    });
-    const { order_id, snap_token } = await orderRes.json();
+  useEffect(() => {
+    if (orderIdFromURL && txStatus === "settlement") {
+      toast.success("Pembayaran berhasil! Sedang menyiapkan gambar...");
+      fetchImage(orderIdFromURL);
+    } else if (orderIdFromURL && txStatus && txStatus !== "settlement") {
+      toast.error(`Transaksi gagal atau tertunda (${txStatus})`);
+    }
+  }, [orderIdFromURL, txStatus]);
 
-    window.snap.pay(snap_token, {
-      onSuccess: () => pollImage(order_id),
-      onPending: () => toast("Pembayaran tertunda", { icon: "⏳" }),
-      onError: () => {
-        toast.error("Gagal pembayaran");
-        setIsLoading(false);
-      },
-      onClose: () => {
-        toast("Jendela pembayaran ditutup");
-        setIsLoading(false);
-      }
-    });
-  } catch (err) {
-    toast.error("Gagal buat order");
-    setIsLoading(false);
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!prompt.trim()) return;
 
-const pollImage = async (order_id) => {
-  toast("Menunggu gambar dari AI...", { icon: "🎨" });
+    setIsLoading(true);
+    setImageUrl(null);
 
-  let retries = 0;
-  const maxRetries = 15;
-  const delay = 4000;
-
-  const tryFetch = async () => {
     try {
-      const res = await fetch(`https://glitchlab.warpzone.workers.dev/image?order_id=${order_id}`);
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        setImageUrl(url);
-        toast.success("Gambar berhasil dibuat!");
-        setIsLoading(false);
-      } else if (retries < maxRetries) {
-        retries++;
-        setTimeout(tryFetch, delay);
-      } else {
-        toast.error("Gagal mendapatkan gambar. Coba ulangi.");
-        setIsLoading(false);
-      }
+      const orderRes = await fetch("https://glitchlab.warpzone.workers.dev/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: prompt.trim() }),
+      });
+
+      const data = await orderRes.json();
+      if (!data.snap_token || !data.order_id) throw new Error("Gagal ambil Snap token");
+
+      toast("Membuka pembayaran...", { icon: "💳" });
+
+      window.snap.pay(data.snap_token, {
+        onSuccess: () => {
+          toast.success("Pembayaran berhasil, generate dimulai...");
+          fetchImage(data.order_id);
+        },
+        onPending: () => {
+          toast("Pembayaran masih tertunda", { icon: "⏳" });
+          setIsLoading(false);
+        },
+        onError: () => {
+          toast.error("Pembayaran gagal");
+          setIsLoading(false);
+        },
+        onClose: () => {
+          toast("Jendela pembayaran ditutup");
+          setIsLoading(false);
+        },
+      });
+
     } catch (err) {
-      toast.error("Gagal mengambil gambar.");
+      toast.error(err.message || "Terjadi error saat membuat order.");
       setIsLoading(false);
     }
   };
 
-  tryFetch();
-};
+  const fetchImage = async (id) => {
+    try {
+      const res = await fetch(`https://glitchlab.warpzone.workers.dev/image?order_id=${id}`);
+      if (!res.ok) throw new Error("Gagal ambil gambar dari server");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setImageUrl(url);
+    } catch (err) {
+      toast.error("Gagal generate gambar.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
