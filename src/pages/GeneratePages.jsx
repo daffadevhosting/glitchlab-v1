@@ -1,5 +1,6 @@
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
