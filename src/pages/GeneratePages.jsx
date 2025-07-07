@@ -28,6 +28,7 @@ export default function GeneratePage() {
       const orderId = data.order_id; // simpan ID transaksi
 
       toast("Membuka jendela pembayaran...", { icon: "💳" });
+      localStorage.setItem("last_prompt", prompt); 
 
       window.snap.pay(data.snap_token, {
         onSuccess: () => {
@@ -53,50 +54,54 @@ export default function GeneratePage() {
     }
   };
 
-  const generateImage = async (prompt, order_id) => {
-    try {
-      const res = await fetch(`https://glitchlab.warpzone.workers.dev/generate-image?order_id=${order_id}&prompt=${encodeURIComponent(prompt)}`);
+const generateImage = async (prompt, order_id) => {
+  try {
+    const finalPrompt = prompt?.trim() || localStorage.getItem("last_prompt");
 
-      if (!res.ok) {
-        const errMsg = await res.text();
-        throw new Error(errMsg || "Gagal memproses gambar.");
-      }
+    if (!finalPrompt) throw new Error("Prompt tidak tersedia. Silakan ulangi.");
 
-      const blob = await res.blob();
-      const objectURL = URL.createObjectURL(blob);
+    const res = await fetch(`https://glitchlab.warpzone.workers.dev/generate-image?order_id=${order_id}&prompt=${encodeURIComponent(finalPrompt)}`);
 
-      if (isFreeUser) {
-        // Tambahkan watermark
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
+    if (!res.ok) {
+      const errMsg = await res.text();
+      throw new Error(errMsg || "Gagal memproses gambar.");
+    }
 
-          ctx.drawImage(img, 0, 0);
-          ctx.font = "bold 28px sans-serif";
-          ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-          ctx.textAlign = "right";
-          ctx.fillText("© GlitchLab Free", canvas.width - 20, canvas.height - 20);
+    const blob = await res.blob();
+    const objectURL = URL.createObjectURL(blob);
 
-          setImageUrl(canvas.toDataURL("image/png"));
-          setIsLoading(false);
-          toast.success("Gambar berhasil dibuat (gratis).");
-        };
-        img.src = objectURL;
-      } else {
-        setImageUrl(objectURL);
+    if (isFreeUser) {
+      // Tambah watermark
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        ctx.font = "bold 28px sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.textAlign = "right";
+        ctx.fillText("© GlitchLab Free", canvas.width - 20, canvas.height - 20);
+        setImageUrl(canvas.toDataURL("image/png"));
         setIsLoading(false);
-        toast.success("Gambar berhasil dibuat!");
-      }
-
-    } catch (err) {
-      toast.error(err.message || "Terjadi kesalahan saat generate gambar.");
+        toast.success("Gambar berhasil dibuat (gratis)");
+      };
+      img.src = objectURL;
+    } else {
+      setImageUrl(objectURL);
+      toast.success("Gambar berhasil dibuat!");
       setIsLoading(false);
     }
-  };
+
+    localStorage.removeItem("last_prompt");
+
+  } catch (err) {
+    toast.error(err.message || "Gagal generate gambar.");
+    setIsLoading(false);
+  }
+};
 
   return (
     <>
