@@ -14,7 +14,7 @@ export default function GeneratePage() {
   useEffect(() => {
     if (orderIdFromURL && txStatus === "settlement") {
       toast.success("Pembayaran berhasil! Sedang menyiapkan gambar...");
-      fetchImage(orderIdFromURL);
+      startPolling(orderIdFromURL);
     } else if (orderIdFromURL && txStatus && txStatus !== "settlement") {
       toast.error(`Transaksi gagal atau tertunda (${txStatus})`);
     }
@@ -41,8 +41,8 @@ export default function GeneratePage() {
 
       window.snap.pay(data.snap_token, {
         onSuccess: () => {
-          toast.success("Pembayaran berhasil, generate dimulai...");
-          fetchImage(data.order_id);
+          toast.success("Pembayaran berhasil! Silakan tunggu proses generate.");
+          // Midtrans redirect akan reload page dengan order_id dan tx_status
         },
         onPending: () => {
           toast("Pembayaran masih tertunda", { icon: "⏳" });
@@ -64,19 +64,23 @@ export default function GeneratePage() {
     }
   };
 
-  const fetchImage = async (id) => {
-    try {
-      const res = await fetch(`https://glitchlab.warpzone.workers.dev/image?order_id=${id}`);
-      if (!res.ok) throw new Error("Gagal ambil gambar dari server");
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setImageUrl(url);
-    } catch (err) {
-      toast.error("Gagal generate gambar.");
-    } finally {
-      setIsLoading(false);
-    }
+  const startPolling = (id) => {
+    setIsLoading(true);
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`https://glitchlab.warpzone.workers.dev/generate-image?order_id=${id}`);
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          setImageUrl(url);
+          toast.success("Gambar berhasil dibuat!");
+          clearInterval(interval);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        // Gambar belum siap, abaikan dulu
+      }
+    }, 5000); // Cek setiap 5 detik
   };
 
   return (
