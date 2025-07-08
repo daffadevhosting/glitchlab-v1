@@ -7,47 +7,28 @@ export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
   const [imageUrl, setImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState(null);
 
   const orderIdFromURL = searchParams.get("order_id");
   const txStatus = searchParams.get("transaction_status");
 
   useEffect(() => {
     if (orderIdFromURL && txStatus === "settlement") {
-      toast.success("Pembayaran berhasil! Sedang menyiapkan gambar...");
+      toast.success("Pembayaran berhasil! AI sedang menyiapkan gambar...");
+      setCurrentOrderId(orderIdFromURL);
       startPolling(orderIdFromURL);
     } else if (orderIdFromURL && txStatus && txStatus !== "settlement") {
       toast.error(`Transaksi gagal atau tertunda (${txStatus})`);
+      setIsLoading(false);
     }
   }, [orderIdFromURL, txStatus]);
-
-const generateImageNow = async (id, prompt) => {
-  setIsLoading(true);
-  try {
-    const res = await fetch(`https://glitchlab.warpzone.workers.dev/generate-image`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ order_id: id, prompt: prompt }),
-    });
-
-    if (!res.ok) throw new Error("Gagal membuat gambar");
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    setImageUrl(url);
-    toast.success("Gambar berhasil dibuat!");
-  } catch (err) {
-    toast.error(err.message || "Terjadi kesalahan saat generate gambar.");
-  } finally {
-    setIsLoading(false);
-  }
-};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
 
     setIsLoading(true);
-    setImageUrl(null);
+    setImageUrl(null); // Reset gambar sebelumnya
 
     try {
       const orderRes = await fetch("https://glitchlab.warpzone.workers.dev/order", {
@@ -59,18 +40,20 @@ const generateImageNow = async (id, prompt) => {
       const data = await orderRes.json();
       if (!data.snap_token || !data.order_id) throw new Error("Gagal ambil Snap token");
 
+      setCurrentOrderId(data.order_id); // Simpan order ID ini
       toast("Membuka pembayaran...", { icon: "💳" });
 
       window.snap.pay(data.snap_token, {
         onSuccess: () => {
-  toast.success("Pembayaran berhasil! Sedang buat gambar...");
-  generateImageNow(data.order_id, prompt.trim());
-   },
+          toast.success("Pembayaran berhasil! AI sedang menyiapkan gambar...");
+          startPolling(data.order_id);
+        },
         onPending: () => {
           toast("Pembayaran masih tertunda", { icon: "⏳" });
           setIsLoading(false);
         },
-        onError: () => {
+        onError: (result) => {
+          console.error("Midtrans Error:", result);
           toast.error("Pembayaran gagal");
           setIsLoading(false);
         },
@@ -81,6 +64,7 @@ const generateImageNow = async (id, prompt) => {
       });
 
     } catch (err) {
+      console.error("Error creating order:", err);
       toast.error(err.message || "Terjadi error saat membuat order.");
       setIsLoading(false);
     }
@@ -88,9 +72,21 @@ const generateImageNow = async (id, prompt) => {
 
   const startPolling = (id) => {
     setIsLoading(true);
+    let pollAttempts = 0;
+    const maxPollAttempts = 30;
+
     const interval = setInterval(async () => {
+      pollAttempts++;
+      if (pollAttempts > maxPollAttempts) {
+        clearInterval(interval);
+        setIsLoading(false);
+        toast.error("Waktu habis! Gambar gagal dibuat atau terjadi kesalahan server. Coba lagi.");
+        return;
+      }
+
       try {
         const res = await fetch(`https://glitchlab.warpzone.workers.dev/generate-image?order_id=${id}`);
+
         if (res.ok) {
           const blob = await res.blob();
           const url = URL.createObjectURL(blob);
@@ -98,9 +94,18 @@ const generateImageNow = async (id, prompt) => {
           toast.success("Gambar berhasil dibuat!");
           clearInterval(interval);
           setIsLoading(false);
+        } else if (res.status === 404) {
+          toast(`Gambar belum siap. Mencoba lagi... (${pollAttempts}/${maxPollAttempts})`, { icon: "🔄", id: "polling-status", duration: 2000 });
+        } else {
+          const errorText = await res.text();
+          console.error("Polling error:", res.status, errorText);
+          toast.error(`Error saat mengambil gambar: ${res.status}`);
+          clearInterval(interval);
+          setIsLoading(false);
         }
       } catch (err) {
-        // Gambar belum siap, abaikan dulu
+        console.error("Polling fetch error:", err);
+        toast.error("Koneksi bermasalah saat polling, mencoba lagi...", { id: "polling-network-error", duration: 2000 });
       }
     }, 5000); // Cek setiap 5 detik
   };
