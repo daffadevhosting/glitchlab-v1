@@ -3,7 +3,7 @@
 Ubah teks jadi karya seni menakjubkan hanya dengan satu klik.  
 GlitchLab adalah aplikasi AI generatif berbasis Cloudflare Workers yang memungkinkan siapa pun menciptakan gambar hanya dengan mendeskripsikannya — dan cukup bayar **Rp 2.500 per generate**.
 
-![preview](https://text-to-image-template.templates.workers.dev/)
+![preview](./public/download (1).png)
 
 ---
 
