@@ -20,6 +20,28 @@ export default function GeneratePage() {
     }
   }, [orderIdFromURL, txStatus]);
 
+const generateImageNow = async (id, prompt) => {
+  setIsLoading(true);
+  try {
+    const res = await fetch(`https://glitchlab.warpzone.workers.dev/generate-image`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order_id: id, prompt: prompt }),
+    });
+
+    if (!res.ok) throw new Error("Gagal membuat gambar");
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    setImageUrl(url);
+    toast.success("Gambar berhasil dibuat!");
+  } catch (err) {
+    toast.error(err.message || "Terjadi kesalahan saat generate gambar.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
@@ -41,9 +63,9 @@ export default function GeneratePage() {
 
       window.snap.pay(data.snap_token, {
         onSuccess: () => {
-          toast.success("Pembayaran berhasil! Silakan tunggu proses generate.");
-          // Midtrans redirect akan reload page dengan order_id dan tx_status
-        },
+  toast.success("Pembayaran berhasil! Sedang buat gambar...");
+  generateImageNow(data.order_id, prompt.trim());
+   },
         onPending: () => {
           toast("Pembayaran masih tertunda", { icon: "⏳" });
           setIsLoading(false);
