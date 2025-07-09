@@ -38,7 +38,7 @@ const iconMap = {
         <nav className="container mx-auto flex justify-between items-center">
           <h2 className="text-2xl font-bold text-white">GlitchLab</h2>
           <Link
-            to="/generate"
+            to="/input"
             className="hidden md:inline-block bg-white/10 backdrop-blur-sm text-white font-semibold py-2 px-5 rounded-full hover:bg-white/20 transition-colors duration-300"
           >
             Mulai Mencipta
@@ -59,7 +59,7 @@ const iconMap = {
           </p>
           <div className="mt-10 hero-element">
             <Link
-              to="/generate"
+              to="/input"
               className="text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 px-10 rounded-full hover:scale-105 transition-all duration-300 ease-in-out"
             >
               ✨ Ciptakan Gambar
@@ -143,7 +143,7 @@ const iconMap = {
           </p>
           <div className="animated-section">
             <Link
-              to="/generate"
+              to="/input"
               className="text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 px-10 rounded-full hover:scale-105 transition-all duration-300 ease-in-out"
             >
               Gratis Mencoba
