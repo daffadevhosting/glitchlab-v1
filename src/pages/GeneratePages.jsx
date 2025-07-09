@@ -33,13 +33,22 @@ const GeneratePages = () => {
       setStatus('💳 Membuka jendela pembayaran...');
 
       window.snap.pay(snap_token, {
-        onSuccess: (result) => {
-          setStatus('✅ Pembayaran berhasil! Mengarahkan...');
+        onSuccess: function(result) {
           console.log('Success:', result);
+          const redirectUrl = result.finish_redirect_url;
+          if (redirectUrl) {
+            window.location.href = redirectUrl;
+          } else {
+            // fallback jika tidak ada
+            window.location.href = `/generate?order_id=${result.order_id}`;
+          }
         },
-        onPending: (result) => {
-          setStatus('⌛ Menunggu pembayaran Anda...');
+        onPending: function(result) {
           console.log('Pending:', result);
+          setStatus('Menunggu pembayaran...');
+        },
+        onClose: function() {
+          alert('Kamu menutup jendela pembayaran sebelum menyelesaikan transaksi.');
         },
         onError: (result) => {
           setStatus('❌ Pembayaran gagal.');
