@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Download, ImageDown, Dna } from "lucide-react";
 
 const BACKEND_URL = 'https://glitchlab.warpzone.workers.dev';
 
@@ -61,9 +62,10 @@ export default function ImageResult() {
   };
 
   return (
+<>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white flex items-center justify-center p-4">
       <div className="max-w-xl w-full bg-gray-900 shadow-xl rounded-2xl p-6 border border-gray-700 text-center">
-        <h1 className="text-3xl font-bold mb-2">🎨 Hasil Gambar AI</h1>
+        <h1 className="text-3xl flex justify-center gap-2 items-center font-bold mb-2"><ImageDown className='w-8 h-8' /> Hasil Gambar AI</h1>
         <p className="text-gray-400 mb-4">{status}</p>
 
         {isLoading && (
@@ -81,16 +83,23 @@ export default function ImageResult() {
               alt="AI Generated"
               className="rounded-lg w-full object-cover mb-4 border border-gray-700"
             />
-
+<div className='flex justify-center'>
             <button
               onClick={handleDownload}
-              className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-lg font-medium"
+              className="bg-blue-600 cursor-pointer hover:bg-blue-700 flex gap-2 items-center transition px-4 py-2 rounded-lg font-medium"
             >
-              ⬇️ Download Gambar
+              <Download /> Download Gambar
             </button>
+</div>
           </>
         )}
       </div>
     </div>
+    <footer className="bg-slate-900 border-t border-slate-800 py-10">
+        <div className="container mx-auto px-6 text-center text-slate-400">
+            <p>&copy; 2025 GlitchLab. Dibuat dengan imajinasi.</p>
+        </div>
+    </footer>
+</>
   );
 }

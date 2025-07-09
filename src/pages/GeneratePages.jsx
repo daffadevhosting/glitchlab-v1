@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ImagePlus, Info, NotebookPen, Dna } from "lucide-react";
 
 const BACKEND_URL = "https://glitchlab.warpzone.workers.dev";
@@ -36,7 +37,7 @@ const GeneratePages = () => {
       window.snap.pay(snap_token, {
         onSuccess: function(result) {
           console.log('Success:', result);
-          const redirectUrl = `https://glitch.pages.dev/generate?order_id=${result.order_id}`;
+          const redirectUrl = `https://glitchlab.pages.dev/generate?order_id=${result.order_id}`;
           if (redirectUrl) {
             window.location.href = redirectUrl;
           } else {
@@ -69,12 +70,12 @@ const GeneratePages = () => {
 
   return (
 <>
-    <header class="absolute top-0 left-0 w-full z-10 p-6 md:p-8">
-        <nav class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold">GlitchLab</a>
-            <a href="/" class="hidden md:inline-block bg-white/10 backdrop-blur-sm text-white font-semibold py-2 px-5 rounded-full hover:bg-white/20 transition-colors duration-300">
+    <header className="absolute top-0 left-0 w-full z-10 p-6 md:p-8">
+        <nav className="container mx-auto flex justify-between items-center">
+            <Link to="/" className="text-2xl font-bold">GlitchLab</Link>
+            <Link to="/" className="hidden md:inline-block bg-white/10 backdrop-blur-sm text-white font-semibold py-2 px-5 rounded-full hover:bg-white/20 transition-colors duration-300">
                 Kembali ke Beranda
-            </a>
+            </Link>
         </nav>
     </header>
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-white py-20 px-4">
@@ -135,6 +136,11 @@ const GeneratePages = () => {
         </div>
       </div>
     </div>
+    <footer className="bg-slate-900 border-t border-slate-800 py-10">
+        <div className="container mx-auto px-6 text-center text-slate-400">
+            <p>&copy; 2025 GlitchLab. Dibuat dengan imajinasi.</p>
+        </div>
+    </footer>
 </>
   );
 };
