@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ImagePlus, Info, NotebookPen, Dna } from "lucide-react";
 
 const BACKEND_URL = "https://glitchlab.warpzone.workers.dev";
 
@@ -67,11 +68,20 @@ const GeneratePages = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-white py-12 px-4">
-      <div className="max-w-2xl mx-auto space-y-10">
+<>
+    <header class="absolute top-0 left-0 w-full z-10 p-6 md:p-8">
+        <nav class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold">GlitchLab</a>
+            <a href="/" class="hidden md:inline-block bg-white/10 backdrop-blur-sm text-white font-semibold py-2 px-5 rounded-full hover:bg-white/20 transition-colors duration-300">
+                Kembali ke Beranda
+            </a>
+        </nav>
+    </header>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-white py-20 px-4">
+      <div className="max-w-2xl mx-auto mt-4 space-y-10">
         {/* CARD: FORM */}
         <div className="bg-white/5 backdrop-blur-md shadow-xl border border-white/10 rounded-2xl p-8">
-          <h1 className="text-3xl font-bold mb-3 text-white">🎨 Generate Gambar dengan AI</h1>
+          <h1 className="text-3xl flex justify-normal items-center gap-2 font-bold mb-3 text-white"><Dna className='h-10 w-10' /> Generate Gambar dengan AI</h1>
           <p className="text-slate-300 mb-5">Masukkan deskripsi gambar yang Anda inginkan (maks 300 karakter).</p>
 
           <textarea
@@ -102,7 +112,7 @@ const GeneratePages = () => {
 
         {/* CARD: INFO */}
         <div className="bg-white/5 backdrop-blur-md shadow-lg border border-white/10 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold mb-6 text-white">ℹ️ Informasi Penting</h2>
+          <h2 className="text-2xl font-bold mb-6 text-white flex justify-normal items-center gap-2"><Info className='h-8 w-8' /> Informasi Penting</h2>
 
           <div className="space-y-6 text-slate-300">
             <div>
@@ -119,11 +129,13 @@ const GeneratePages = () => {
               <p className="text-sm leading-relaxed">
                 Dengan menggunakan layanan ini, Anda menyetujui untuk tidak menggunakan gambar yang dihasilkan untuk konten ilegal, kekerasan, atau SARA. Prompt yang melanggar kebijakan akan ditolak.
               </p>
+              <strong className='font-semibold text-amber-400 text-center'>“Prompt akan ditinjau jika melanggar”</strong>
             </div>
           </div>
         </div>
       </div>
     </div>
+</>
   );
 };
 
