@@ -81,7 +81,7 @@ const GeneratePages = () => {
                 : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-900'
             }`}
           >
-            {isLoading ? '⏳ Memproses...' : '💰 Buat Pesanan & Bayar (Rp 2.500)'}
+            {isLoading ? '⏳ Memproses...' : '💰 Buat Pesanan & Bayar (Rp 500)'}
           </button>
 
           {status && (
@@ -99,7 +99,7 @@ const GeneratePages = () => {
             <div>
               <h3 className="font-semibold text-slate-100 mb-2">💡 FAQ</h3>
               <ul className="list-disc list-inside space-y-1 text-sm">
-                <li><strong>Berapa biaya per gambar?</strong> Rp 2.500 per proses generate.</li>
+                <li><strong>Berapa biaya per gambar?</strong> Rp 500 per proses generate.</li>
                 <li><strong>Berapa lama prosesnya?</strong> 10-30 detik setelah pembayaran berhasil.</li>
                 <li><strong>Apakah bisa refund?</strong> Tidak, karena ini layanan digital instan.</li>
               </ul>

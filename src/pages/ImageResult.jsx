@@ -19,40 +19,50 @@ const ImageResult = () => {
       return;
     }
 
-    const pollForImage = async (maxAttempts = 20, interval = 3000) => {
-      for (let i = 0; i < maxAttempts; i++) {
-        try {
-          const response = await fetch(`${BACKEND_URL}/generate-image?order_id=${orderId}`);
+    const fetchAndPoll = async () => {
+      try {
+        // 🔁 Step 1: Trigger generate-image (hanya sekali)
+        await fetch(`${BACKEND_URL}/generate-image?order_id=${orderId}`).catch(() => {
+          // Bisa abaikan error jika sudah pernah generate
+        });
 
-          if (response.ok) {
-            const imageBlob = await response.blob();
-            const url = URL.createObjectURL(imageBlob);
-            setImageUrl(url);
-            setStatus('✅ Gambar berhasil dibuat!');
+        // 🔁 Step 2: Poll ke /image sampai tersedia
+        const maxAttempts = 20;
+        const interval = 3000;
+
+        for (let i = 0; i < maxAttempts; i++) {
+          try {
+            const res = await fetch(`${BACKEND_URL}/image?order_id=${orderId}`);
+            if (res.ok) {
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              setImageUrl(url);
+              setStatus('✅ Gambar berhasil dibuat!');
+              setIsLoading(false);
+              return;
+            } else {
+              console.log(`Polling ${i + 1}: gambar belum siap.`);
+              await new Promise((r) => setTimeout(r, interval));
+            }
+          } catch (err) {
+            console.error('Polling gagal:', err);
+            setError('Gagal memuat gambar dari server.');
             setIsLoading(false);
             return;
           }
-
-          if (response.status === 404) {
-            console.log(`Attempt ${i + 1}: Gambar belum siap. Coba lagi ${interval / 1000}s...`);
-            await new Promise(res => setTimeout(res, interval));
-          } else {
-            throw new Error(`Server error: ${response.status}`);
-          }
-        } catch (err) {
-          console.error('Polling error:', err);
-          setError('Gagal mengambil gambar. Silakan coba lagi nanti.');
-          setIsLoading(false);
-          return;
         }
-      }
 
-      setStatus('❌ Gagal Membuat Gambar');
-      setError(`Order ID: ${orderId}`);
-      setIsLoading(false);
+        setStatus('❌ Timeout: Gambar tidak tersedia setelah beberapa saat.');
+        setError(`Order ID: ${orderId}`);
+        setIsLoading(false);
+      } catch (err) {
+        setStatus('❌ Gagal memicu generate-image.');
+        setError(err.message);
+        setIsLoading(false);
+      }
     };
 
-    pollForImage();
+    fetchAndPoll();
   }, [orderId]);
 
   return (
