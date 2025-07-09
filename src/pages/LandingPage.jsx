@@ -122,7 +122,7 @@ const iconMap = {
             ].map((id, idx) => (
               <div key={idx} className="overflow-hidden rounded-xl aspect-square animated-section">
                 <img
-                  src={`/public/glitchlab-glitch-${id}.png`}
+                  src={`/glitchlab-glitch-${id}.png`}
                   alt="AI gallery item"
                   className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                 />
