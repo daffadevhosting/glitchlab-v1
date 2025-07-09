@@ -28,14 +28,14 @@ const GeneratePages = () => {
         const err = await response.json();
         throw new Error(err.error || 'Gagal menghubungi server.');
       }
-
+      
       const { snap_token } = await response.json();
       setStatus('💳 Membuka jendela pembayaran...');
 
       window.snap.pay(snap_token, {
         onSuccess: function(result) {
           console.log('Success:', result);
-          const redirectUrl = result.finish_redirect_url;
+          const redirectUrl = `https://glitch.pages.dev/generate?order_id=${result.order_id}`;
           if (redirectUrl) {
             window.location.href = redirectUrl;
           } else {
